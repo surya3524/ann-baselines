@@ -3,3 +3,4 @@ hnswlib
 numpy
 pandas
 matplotlib
+psutil
