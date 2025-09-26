@@ -1,72 +1,44 @@
-import urllib.request, numpy as np, struct, pathlib, tarfile
-
+import numpy as np, struct, pathlib, sys
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-OUT  = ROOT / "data"
-OUT.mkdir(parents=True, exist_ok=True)
+OUT  = ROOT / "data"; OUT.mkdir(parents=True, exist_ok=True)
 
-HF = "https://huggingface.co/datasets/qbo-odp/sift1m/resolve/main"
-DIRECT_FILES = {
-    "sift_base.fvecs":        f"{HF}/sift_base.fvecs?download=true",
-    "sift_query.fvecs":       f"{HF}/sift_query.fvecs?download=true",
-    "sift_groundtruth.ivecs": f"{HF}/sift_groundtruth.ivecs?download=true",
+FILES = {
+    "base": (OUT/"sift_base.fvecs",        516000000, 128),
+    "query":(OUT/"sift_query.fvecs",         5160000, 128),
+    "gt":   (OUT/"sift_groundtruth.ivecs",   4040000, 100),
 }
 
-TEXMEX_TAR = "http://corpus-texmex.irisa.fr/sift.tar.gz"
-
-def _download(url: str, dst: pathlib.Path):
-    tmp = dst.with_suffix(dst.suffix + ".part")
-    req = urllib.request.Request(url, headers={"User-Agent": "python"})
-    with urllib.request.urlopen(req) as r, open(tmp, "wb") as f:
-        f.write(r.read())
-    tmp.replace(dst)
-
-def fetch():
-    try:
-        for fname, url in DIRECT_FILES.items():
-            dst = OUT / fname
-            if not dst.exists():
-                print(f"Downloading {fname} from HF...")
-                _download(url, dst)
-        return
-    except Exception as e:
-        print(f"[WARN] Direct download failed ({e}). Falling back to TEXMEX tarball...")
-    tar_path = OUT / "sift.tar.gz"
-    if not tar_path.exists():
-        print("Downloading sift.tar.gz from TEXMEX...")
-        _download(TEXMEX_TAR, tar_path)
-    print("Extracting needed files from sift.tar.gz...")
-    with tarfile.open(tar_path, "r:gz") as tf:
-        members = {m.name: m for m in tf.getmembers()}
-        wanted = {
-            "sift/sift_base.fvecs":        OUT / "sift_base.fvecs",
-            "sift/sift_query.fvecs":       OUT / "sift_query.fvecs",
-            "sift/sift_groundtruth.ivecs": OUT / "sift_groundtruth.ivecs",
-        }
-        for inner, dst in wanted.items():
-            if not dst.exists():
-                tf.extract(members[inner], path=OUT)
-                (OUT / inner).rename(dst)
+def validate():
+    ok = True
+    for p, expect_bytes, expect_dim in FILES.values():
+        if not p.exists():
+            print(f"[ERROR] Missing file: {p}"); ok = False; continue
+        size = p.stat().st_size
+        if size != expect_bytes:
+            print(f"[ERROR] {p} has {size} bytes; expected {expect_bytes}"); ok = False; continue
+        with open(p, "rb") as f:
+            d = struct.unpack("i", f.read(4))[0]
+        if d != expect_dim:
+            print(f"[ERROR] {p} header dim={d}; expected {expect_dim}"); ok = False
+    return ok
 
 def read_fvecs(path: pathlib.Path) -> np.ndarray:
-    with open(path, "rb") as f:
-        buf = f.read()
-    dim = struct.unpack_from("i", buf, 0)[0]
-    arr = np.frombuffer(buf, dtype=np.float32, offset=4).reshape(-1, dim + 1)[:, 1:]
-    return arr.astype(np.float32)
+    a = np.fromfile(path, dtype=np.int32)
+    d = a[0]
+    a = a.reshape(-1, d + 1)
+    return a[:, 1:].view(np.float32)
 
 def read_ivecs(path: pathlib.Path) -> np.ndarray:
-    with open(path, "rb") as f:
-        buf = f.read()
-    dim = struct.unpack_from("i", buf, 0)[0]
-    arr = np.frombuffer(buf, dtype=np.int32).reshape(-1, dim + 1)[:, 1:]
-    return arr.astype(np.int32)
+    a = np.fromfile(path, dtype=np.int32)
+    d = a[0]
+    a = a.reshape(-1, d + 1)
+    return a[:, 1:]
 
 if __name__ == "__main__":
-    fetch()
-    xb = read_fvecs(OUT / "sift_base.fvecs")
-    xq = read_fvecs(OUT / "sift_query.fvecs")
-    gt = read_ivecs(OUT / "sift_groundtruth.ivecs")
-    np.save(OUT / "xb.npy", xb)
-    np.save(OUT / "xq.npy", xq)
-    np.save(OUT / "gt.npy", gt)
+    if not validate():
+        print("Fix files in data/ and rerun."); sys.exit(1)
+    xb = read_fvecs(OUT/"sift_base.fvecs")
+    xq = read_fvecs(OUT/"sift_query.fvecs")
+    gt = read_ivecs(OUT/"sift_groundtruth.ivecs")
+    np.save(OUT/"xb.npy", xb); np.save(OUT/"xq.npy", xq); np.save(OUT/"gt.npy", gt)
     print("Saved data/*.npy")
