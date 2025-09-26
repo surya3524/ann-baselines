@@ -1,0 +1,17 @@
+.DS_Store
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Data files (large/binary) - keep out of git
+data/
+*.fvecs
+*.ivecs
+*.npy
+*.bin
+
+# IDEs
+.vscode/

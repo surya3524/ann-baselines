@@ -1,0 +1,48 @@
+import os, io, urllib.request, numpy as np, gzip, struct, pathlib, tarfile
+
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+OUT  = ROOT / "data"
+OUT.mkdir(parents=True, exist_ok=True)
+
+HF = "https://huggingface.co/datasets/qbo-odp/sift1m/resolve/main"
+DIRECT_FILES = {
+    "sift_base.fvecs":        f"{HF}/sift_base.fvecs?download=true",
+    "sift_query.fvecs":       f"{HF}/sift_query.fvecs?download=true",
+    "sift_groundtruth.ivecs": f"{HF}/sift_groundtruth.ivecs?download=true",
+}
+
+TEXMEX_TAR = "http://corpus-texmex.irisa.fr/sift.tar.gz"
+
+def _download(url: str, dst: pathlib.Path):
+    dst_tmp = dst.with_suffix(dst.suffix + ".part")
+    req = urllib.request.Request(url, headers={"User-Agent": "python"})
+    with urllib.request.urlopen(req) as r, open(dst_tmp, "wb") as f:
+        f.write(r.read())
+    dst_tmp.replace(dst)
+
+def fetch():
+    try:
+        for fname, url in DIRECT_FILES.items():
+            dst = OUT / fname
+            if not dst.exists():
+                print(f"Downloading {fname} from HF...")
+                _download(url, dst)
+        return
+    except Exception as e:
+        print(f"[WARN] Direct download failed ({e}). Falling back to TEXMEX tarball...")
+
+    tar_path = OUT / "sift.tar.gz"
+    if not tar_path.exists():
+        print("Downloading sift.tar.gz from TEXMEX...")
+        _download(TEXMEX_TAR, tar_path)
+
+    print("Extracting needed files from sift.tar.gz...")
+    with tarfile.open(tar_path, "r:gz") as tf:
+
+python src/prepare_data.py
+
+python - <<'PY'
+import numpy as np
+for p in ["data/xb.npy","data/xq.npy","data/gt.npy"]:
+    a = np.load(p, mmap_mode='r')
+    print(p, a.shape, a.dtype)
