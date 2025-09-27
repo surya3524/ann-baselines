@@ -1,0 +1,7 @@
+dataset,method,knobs,recall@10,median_ms,p95_ms,p99_ms,build_time_s,index_bytes,hardware,seed
+SIFT1M,HNSW,"M=16,efC=200,efS=64",0.9633,0.1585839999975746,0.1931270999953937,0.2285539299985831,64.67,672519776,"{""machine"": ""arm64"", ""processor"": ""arm"", ""ram_gb"": 16.0, ""system"": ""macOS-15.6-arm64-arm-64bit""}",42
+SIFT1M,HNSW,"M=16,efC=200,efS=128",0.9892,0.2798749999968208,0.3388372000003414,0.3830070799993736,64.67,672519776,"{""machine"": ""arm64"", ""processor"": ""arm"", ""ram_gb"": 16.0, ""system"": ""macOS-15.6-arm64-arm-64bit""}",42
+SIFT1M,HNSW,"M=16,efC=200,efS=256",0.9972,0.503625000007446,0.6140830000020969,0.6462932499989904,64.67,672519776,"{""machine"": ""arm64"", ""processor"": ""arm"", ""ram_gb"": 16.0, ""system"": ""macOS-15.6-arm64-arm-64bit""}",42
+SIFT1M,IVF-OPQ,"nlist=4096,m=8,nprobe=8,bits=8",0.3828,0.04954099999565642,0.05333300000387453,0.056166000000246186,29.02,18326779,"{""machine"": ""arm64"", ""processor"": ""arm"", ""ram_gb"": 16.0, ""system"": ""macOS-15.6-arm64-arm-64bit""}",42
+SIFT1M,IVF-OPQ,"nlist=4096,m=8,nprobe=16,bits=8",0.4037,0.058750000000884484,0.06362500000278715,0.06720800999730159,29.02,18326779,"{""machine"": ""arm64"", ""processor"": ""arm"", ""ram_gb"": 16.0, ""system"": ""macOS-15.6-arm64-arm-64bit""}",42
+SIFT1M,IVF-OPQ,"nlist=4096,m=8,nprobe=32,bits=8",0.4132,0.07591699999665025,0.08366699999839966,0.08925000000203909,29.02,18326779,"{""machine"": ""arm64"", ""processor"": ""arm"", ""ram_gb"": 16.0, ""system"": ""macOS-15.6-arm64-arm-64bit""}",42
