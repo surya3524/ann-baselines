@@ -13,5 +13,10 @@ data/
 *.npy
 *.bin
 
+# Results and index files
+results/
+*.idx
+*.index
+
 # IDEs
 .vscode/
