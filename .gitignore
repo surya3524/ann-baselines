@@ -14,9 +14,10 @@ data/
 *.bin
 
 # Results and index files
-results/
-*.idx
-*.index
+results/*.idx
+results/*.index
+results/hnsw.idx
+results/ivfopq_nprobe*.index
 
 # IDEs
 .vscode/
